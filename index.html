@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anti-Kuddus Protocol — Neon Secure System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #02010a;
+    --bg-1: rgba(8, 6, 20, 0.7);
+    --bg-2: rgba(15, 10, 30, 0.9);
+    --bg-3: rgba(25, 15, 45, 0.95);
+    --border: rgba(0, 243, 255, 0.15);
+    --border-2: rgba(255, 0, 229, 0.3);
+    --fg: #ffffff;
+    --fg-dim: #c4b5e0;
+    --muted: #7a6e94;
+    
+    /* Neon Accents */
+    --accent: #00f3ff;      /* Neon Cyan */
+    --accent-2: #bc13fe;    /* Neon Purple */
+    --accent-glow: rgba(0, 243, 255, 0.5);
+    
+    --student: #00f3ff;
+    --teacher: #00ff9d;     /* Neon Green */
+    --captain2: #ff00e5;    /* Neon Pink */
+    --captain3: #f5b544;    /* Neon Yellow */
+    --success: #00ff9d;
+    --warning: #f5b544;
+    --danger: #ff003c;      /* Neon Red */
+    --info: #00f3ff;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Inter', sans-serif;
+    background: var(--bg-0); color: var(--fg);
+    -webkit-font-smoothing: antialiased; overflow: hidden;
+  }
+  .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  
+  /* Neon Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-2)); border-radius: 4px; }
+
+  /* === AMBIENT NEON BACKGROUND === */
+  .ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #02010a; }
+  
+  .grid-bg {
+    position: absolute; inset: -50px;
+    background-image:
+      linear-gradient(rgba(0, 243, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(188, 19, 254, 0.08) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black, transparent 100%);
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+  }
+
+  .orb { 
+    position: absolute; border-radius: 50%; 
+    filter: blur(80px); 
+    mix-blend-mode: screen;
+  }
+  .orb-1 { width: 600px; height: 600px; top: -150px; left: -100px; background: var(--accent); opacity: 0.4; animation: drift1 12s ease-in-out infinite alternate; box-shadow: 0 0 150px var(--accent); }
+  .orb-2 { width: 500px; height: 500px; bottom: -100px; right: -50px; background: var(--accent-2); opacity: 0.4; animation: drift2 15s ease-in-out infinite alternate; box-shadow: 0 0 150px var(--accent-2); }
+  .orb-3 { width: 400px; height: 400px; top: 40%; left: 50%; background: #ff00e5; opacity: 0.3; animation: drift3 9s ease-in-out infinite alternate; box-shadow: 0 0 100px #ff00e5; }
+  
+  @keyframes drift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(100px, 80px) scale(1.2); } }
+  @keyframes drift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-80px,-60px) scale(0.8); } }
+  @keyframes drift3 { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-30%, -70%) scale(1.3); } }
+
+  /* === LOGIN SCREEN === */
+  #loginScreen {
+    position: relative; z-index: 1; height: 100vh;
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 0;
+  }
+  .login-left {
+    padding: 56px 64px; display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; border-right: 1px solid var(--border);
+    background: rgba(2, 1, 10, 0.4); backdrop-filter: blur(10px);
+  }
+  .login-right {
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .shield-logo {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    box-shadow: 0 0 30px var(--accent-glow);
+  }
+  .login-title { 
+    font-size: clamp(40px, 4.5vw, 64px); font-weight: 700; line-height: 1; letter-spacing: -0.03em; 
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  .neon-gradient-text {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), #ff00e5);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+  }
+  .role-tab {
+    padding: 14px 8px; border-radius: 12px; cursor: pointer; transition: all 0.3s;
+    border: 1px solid var(--border); background: rgba(0, 243, 255, 0.02);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; color: var(--fg-dim);
+  }
+  .role-tab:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); transform: translateY(-2px); }
+  .role-tab.active { 
+    background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(188, 19, 254, 0.2)); 
+    color: var(--accent); border-color: var(--accent); 
+    box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px rgba(0, 243, 255, 0.1); 
+    text-shadow: 0 0 8px var(--accent-glow);
+  }
+  .role-tab.active i { color: var(--accent); }
+  .login-input {
+    width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border-2);
+    border-radius: 12px; padding: 14px 16px 14px 46px; color: var(--fg);
+    font-family: inherit; font-size: 15px; transition: all 0.3s;
+  }
+  .login-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow), inset 0 0 10px rgba(0,0,0,0.5); }
+  .login-btn {
+    width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; border: 0; border-radius: 12px; padding: 15px;
+    font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.3s; box-shadow: 0 0 20px var(--accent-glow);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .login-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px var(--accent-glow); }
+
+  /* === APP SHELL === */
+  #appShell { display: none; height: 100vh; position: relative; z-index: 1; }
+  .sidebar {
+    width: 260px; height: 100vh; background: rgba(2, 1, 10, 0.7);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    flex-shrink: 0; transition: transform 0.3s;
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    color: var(--fg-dim); font-size: 14px; font-weight: 500; position: relative;
+    margin-bottom: 4px;
+  }
+  .nav-item:hover { background: rgba(0, 243, 255, 0.05); color: var(--accent); }
+  .nav-item.active { 
+    background: linear-gradient(90deg, rgba(0, 243, 255, 0.15), transparent); 
+    color: var(--accent); 
+    box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1);
+  }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; 
+    background: var(--accent); border-radius: 0 3px 3px 0; 
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .nav-item i { width: 18px; height: 18px; }
+  .nav-badge {
+    margin-left: auto; background: var(--danger); color: white;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 0 10px var(--danger);
+  }
+
+  .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 64px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; flex-shrink: 0; background: rgba(2, 1, 10, 0.6); backdrop-filter: blur(12px);
+  }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* === NEON CARDS === */
+  .card {
+    background: rgba(8, 6, 20, 0.6); backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }
+  
+  .stat-card {
+    background: rgba(8, 6, 20, 0.6); backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; position: relative; overflow: hidden;
+    transition: all 0.3s;
+  }
+  .stat-card:hover { 
+    transform: translateY(-3px); border-color: var(--accent); 
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.2); 
+  }
+  .stat-card::after {
+    content: ''; position: absolute; bottom: 0; right: 0; width: 100px; height: 100px;
+    border-radius: 50%; filter: blur(40px); opacity: 0.2;
+    background: var(--card-color, var(--accent));
+  }
+
+  /* === BUTTONS === */
+  .btn { padding: 10px 16px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 0 15px var(--accent-glow); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 25px var(--accent-glow); }
+  .btn-ghost { background: rgba(0, 243, 255, 0.05); color: var(--accent); border-color: var(--border); }
+  .btn-ghost:hover { background: rgba(0, 243, 255, 0.1); border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+  .btn-danger { background: rgba(255, 0, 60, 0.1); color: var(--danger); border-color: rgba(255, 0, 60, 0.3); }
+  .btn-danger:hover { background: rgba(255, 0, 60, 0.2); box-shadow: 0 0 15px rgba(255, 0, 60, 0.3); }
+  .btn-success { background: rgba(0, 255, 157, 0.1); color: var(--success); border-color: rgba(0, 255, 157, 0.3); }
+  .btn-success:hover { background: rgba(0, 255, 157, 0.2); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+
+  /* === STATUS BADGES === */
+  .badge { padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'JetBrains Mono', monospace; }
+  .badge-pending { background: rgba(245, 181, 68, 0.1); color: var(--warning); border: 1px solid var(--warning); text-shadow: 0 0 5px var(--warning); }
+  .badge-approved { background: rgba(6,182,212,0.1); color: var(--info); border: 1px solid var(--info); text-shadow: 0 0 5px var(--info); }
+  .badge-rejected { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid var(--danger); text-shadow: 0 0 5px var(--danger); }
+  .badge-resolved { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid var(--success); text-shadow: 0 0 5px var(--success); }
+
+  /* === FORMS === */
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border-2);
+    border-radius: 10px; padding: 12px 14px; color: var(--fg);
+    font-family: inherit; font-size: 14px; transition: all 0.3s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .form-textarea { resize: vertical; min-height: 120px; }
+  .form-label { display: block; font-size: 11px; color: var(--accent); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; text-shadow: 0 0 5px var(--accent-glow); }
+
+  /* === MODAL === */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px);
+    z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: rgba(8, 6, 20, 0.95); border: 1px solid var(--accent);
+    border-radius: 20px; max-width: 600px; width: 100%; max-height: 85vh;
+    overflow-y: auto; box-shadow: 0 0 50px var(--accent-glow);
+    position: relative;
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  }
+
+  /* === TOAST === */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    background: rgba(8, 6, 20, 0.95); border: 1px solid var(--accent); 
+    padding: 14px 18px; border-radius: 10px; min-width: 300px; max-width: 400px;
+    display: flex; align-items: flex-start; gap: 12px;
+    animation: slideIn 0.4s cubic-bezier(0.4,0,0.2,1); 
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .toast.success { border-color: var(--success); box-shadow: 0 0 20px rgba(0, 255, 157, 0.3); }
+  .toast.warning { border-color: var(--warning); box-shadow: 0 0 20px rgba(245, 181, 68, 0.3); }
+  .toast.danger { border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 0, 60, 0.3); }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.out { animation: slideOut 0.3s forwards; }
+  @keyframes slideOut { to { transform: translateX(120%); opacity: 0; } }
+
+  /* === SOS BUTTON === */
+  .sos-btn {
+    width: 100%; aspect-ratio: 1; max-width: 280px; margin: 0 auto;
+    border-radius: 50%; border: 0; cursor: pointer; position: relative;
+    background: radial-gradient(circle at 30% 30%, #ff4757, #8b0000);
+    box-shadow: 0 0 60px rgba(255, 0, 60, 0.6), inset 0 -10px 30px rgba(0,0,0,0.5);
+    transition: all 0.3s; display: grid; place-items: center;
+  }
+  .sos-btn:hover { transform: scale(1.05); box-shadow: 0 0 100px rgba(255, 0, 60, 0.8); }
+  .sos-btn:active { transform: scale(0.98); }
+  .sos-pulse {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid var(--danger); animation: sosPulse 2s ease-out infinite;
+  }
+  @keyframes sosPulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+  /* === SEATING === */
+  .seat {
+    width: 44px; height: 44px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .seat:hover { transform: scale(1.1); z-index: 1; box-shadow: 0 0 10px var(--accent); }
+  .seat-empty { background: rgba(255,255,255,0.02); border: 1px dashed var(--border); color: var(--muted); }
+  .seat-occupied { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--student); color: var(--student); box-shadow: 0 0 8px rgba(0, 243, 255, 0.2); }
+  .seat-captain { background: rgba(255, 0, 229, 0.1); border: 1px solid var(--captain2); color: var(--captain2); box-shadow: 0 0 8px rgba(255, 0, 229, 0.2); }
+  .seat-kuddus { background: rgba(255, 0, 60, 0.1); border: 1px solid var(--danger); color: var(--danger); box-shadow: 0 0 8px rgba(255, 0, 60, 0.3); }
+  .seat-teacher { background: rgba(0, 255, 157, 0.1); border: 1px solid var(--teacher); color: var(--teacher); box-shadow: 0 0 8px rgba(0, 255, 157, 0.2); }
+
+  /* === CHAT TYPING === */
+  .typing-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: inline-block; animation: typing 1.4s infinite; box-shadow: 0 0 5px var(--accent); }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-8px); opacity: 1; } }
+
+  /* === CATEGORY CARD === */
+  .cat-card {
+    padding: 16px; border-radius: 14px; border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.3s; background: rgba(0, 243, 255, 0.02);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  }
+  .cat-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 0 15px var(--accent-glow); }
+  .cat-card.selected { border-color: var(--accent); background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 0 3px var(--accent-glow), inset 0 0 10px rgba(0, 243, 255, 0.1); }
+  .cat-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; }
+
+  /* === ACTIVITY ITEM === */
+  .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: 0; }
+  .activity-dot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+
+  /* === VIEW TRANSITION === */
+  .view { animation: viewIn 0.4s ease; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* === MOBILE === */
+  @media (max-width: 1024px) {
+    #loginScreen { grid-template-columns: 1fr; }
+    .login-left { display: none; }
+    .sidebar { position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+  }
+  @media (max-width: 640px) {
+    .content { padding: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,*::before,*::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-left">
+    <div class="flex items-center gap-3">
+      <div class="shield-logo">
+        <i data-lucide="shield-alert" style="color:#fff;width:28px;height:28px"></i>
+      </div>
+      <div>
+        <div class="font-display font-bold text-lg" style="color:var(--accent); text-shadow: 0 0 10px var(--accent-glow);">ANTI-KUDDUS</div>
+        <div class="font-mono text-xs" style="color:var(--accent-2)">v3.0 · NEON SECURE CHANNEL</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6" style="background:rgba(0,243,255,0.05);border:1px solid var(--accent)">
+        <span class="w-2 h-2 rounded-full" style="background:var(--accent);box-shadow:0 0 8px var(--accent);animation:sosPulse 2s infinite"></span>
+        <span class="font-mono text-xs" style="color:var(--accent)">PROTOCOL ACTIVE</span>
+      </div>
+      <h1 class="login-title font-display">
+        Report <span class="neon-gradient-text">corruption.</span><br>
+        Protect <span style="color:var(--fg-dim)">students.</span>
+      </h1>
+      <p class="mt-6 text-base max-w-md" style="color:var(--fg-dim);line-height:1.6">
+        An anonymous reporting platform to expose misconduct, bribery, and abuse of power by class captains. Your voice matters. Your identity is protected.
+      </p>
+      <div class="flex gap-8 mt-8">
+        <div><div class="font-mono text-2xl font-bold" style="color:var(--accent);text-shadow:0 0 10px var(--accent-glow)">127</div><div class="text-xs" style="color:var(--muted)">Reports filed</div></div>
+        <div><div class="font-mono text-2xl font-bold" style="color:var(--success);text-shadow:0 0 10px var(--success)">89</div><div class="text-xs" style="color:var(--muted)">Resolved</div></div>
+        <div><div class="font-mono text-2xl font-bold" style="color:var(--warning);text-shadow:0 0 10px var(--warning)">12</div><div class="text-xs" style="color:var(--muted)">Under review</div></div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-sm" style="color:var(--muted)">
+      <span>© 2024 Veritas Academy · Internal System</span>
+      <span class="font-mono">AES-256 · JWT</span>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="w-full max-w-md">
+      <div class="mb-8">
+        <h2 class="font-display text-3xl font-bold mb-2" style="text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);">Sign in</h2>
+        <p style="color:var(--fg-dim)">Select your role and enter credentials</p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-2 mb-6" id="roleTabs">
+        <div class="role-tab active" data-role="student">
+          <i data-lucide="graduation-cap"></i><span>Student</span>
+        </div>
+        <div class="role-tab" data-role="teacher">
+          <i data-lucide="presentation"></i><span>Teacher</span>
+        </div>
+        <div class="role-tab" data-role="captain2">
+          <i data-lucide="medal"></i><span>2nd Capt</span>
+        </div>
+        <div class="role-tab" data-role="captain3">
+          <i data-lucide="award"></i><span>3rd Capt</span>
+        </div>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="form-label">Email Address</label>
+          <div class="relative">
+            <i data-lucide="mail" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--accent)"></i>
+            <input type="email" class="login-input" id="loginEmail" placeholder="you@veritas.edu" required>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Password</label>
+          <div class="relative">
+            <i data-lucide="lock" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--accent)"></i>
+            <input type="password" class="login-input" id="loginPassword" placeholder="••••••••" required style="padding-right:48px">
+            <button type="button" id="pwToggle" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:var(--accent);padding:6px">
+              <i data-lucide="eye" id="pwIcon" style="width:18px;height:18px"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 cursor-pointer" style="color:var(--fg-dim)">
+            <input type="checkbox" checked style="accent-color:var(--accent)"> Keep me signed in
+          </label>
+          <a href="#" id="forgotLink" style="color:var(--accent-2);text-decoration:none">Forgot password?</a>
+        </div>
+        <button type="submit" class="login-btn">
+          <i data-lucide="log-in" style="width:18px;height:18px"></i>
+          <span>Access Protocol</span>
+        </button>
+      </form>
+
+      <div class="mt-6 p-4 rounded-xl" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+        <div class="font-mono text-xs mb-2" style="color:var(--accent)">DEMO CREDENTIALS</div>
+        <div class="space-y-1 text-xs font-mono" style="color:var(--fg-dim)">
+          <div>student@demo.com · teacher@demo.com</div>
+          <div>captain2@demo.com · captain3@demo.com</div>
+          <div style="color:var(--accent-2)">Password: demo123</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell">
+  <div style="display:flex;height:100vh">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="p-5 border-b" style="border-color:var(--border)">
+        <div class="flex items-center gap-3">
+          <div class="shield-logo" style="width:42px;height:42px;border-radius:11px">
+            <i data-lucide="shield-alert" style="color:#fff;width:22px;height:22px"></i>
+          </div>
+          <div>
+            <div class="font-display font-bold text-sm" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">ANTI-KUDDUS</div>
+            <div class="font-mono text-xs" style="color:var(--accent-2)">Protocol v3.0</div>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto p-4 space-y-1" id="navMenu"></nav>
+      <div class="p-4 border-t" style="border-color:var(--border)">
+        <div class="flex items-center gap-3 mb-3">
+          <div id="userAvatar" class="w-10 h-10 rounded-full grid place-items-center font-bold text-sm"></div>
+          <div class="flex-1 min-w-0">
+            <div id="userName" class="text-sm font-semibold truncate" style="color:var(--fg)"></div>
+            <div id="userRole" class="text-xs font-mono" style="color:var(--accent)"></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost w-full justify-center" onclick="App.logout()">
+          <i data-lucide="log-out" style="width:16px;height:16px"></i> Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-area">
+      <header class="topbar">
+        <div class="flex items-center gap-4">
+          <button class="lg:hidden btn btn-ghost p-2" onclick="document.getElementById('sidebar').classList.toggle('open')">
+            <i data-lucide="menu" style="width:20px;height:20px"></i>
+          </button>
+          <div>
+            <h1 id="pageTitle" class="font-display text-xl font-bold" style="text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);">Dashboard</h1>
+            <p id="pageSub" class="text-xs font-mono" style="color:var(--accent)"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost p-2 relative" onclick="App.showNotifications()">
+            <i data-lucide="bell" style="width:20px;height:20px"></i>
+            <span id="notifBadge" class="absolute -top-1 -right-1 w-5 h-5 rounded-full grid place-items-center text-xs font-bold text-white" style="background:var(--danger);box-shadow:0 0 8px var(--danger);display:none"></span>
+          </button>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background:rgba(0,255,157,0.05);border:1px solid var(--success)">
+            <span class="w-2 h-2 rounded-full" style="background:var(--success);box-shadow:0 0 5px var(--success)"></span>
+            <span class="font-mono text-xs" style="color:var(--success)">SECURE</span>
+          </div>
+        </div>
+      </header>
+      <main class="content" id="content"></main>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Container -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)Modal.close()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// ANTI-KUDDUS PROTOCOL — Full Application
+// ════════════════════════════════════════════════════════════
+
+// ─── DATABASE LAYER (Simulated MongoDB/Mongoose) ─────────────
+const DB = {
+  _data: null,
+  init() {
+    const saved = localStorage.getItem('akp_db_neon');
+    if (saved) { this._data = JSON.parse(saved); return; }
+    this._data = this._seed();
+    this.save();
+  },
+  save() { localStorage.setItem('akp_db_neon', JSON.stringify(this._data)); },
+  _seed() {
+    const now = Date.now();
+    return {
+      users: [
+        { _id:'u1', name:'Arjun Sharma', email:'student@demo.com', password:'demo123', role:'student', class:'10-A', rollNo:'23', strikes:0, warnings:1 },
+        { _id:'u2', name:'Mrs. Lakshmi Iyer', email:'teacher@demo.com', password:'demo123', role:'teacher', subject:'Mathematics & Class Teacher 10-A' },
+        { _id:'u3', name:'Priya Nair', email:'captain2@demo.com', password:'demo123', role:'captain2', class:'10-A', rollNo:'02' },
+        { _id:'u4', name:'Rahul Menon', email:'captain3@demo.com', password:'demo123', role:'captain3', class:'10-A', rollNo:'45' },
+        { _id:'u5', name:'Kodu Kuddus', email:'kuddus@demo.com', password:'demo123', role:'captain', class:'10-A', rollNo:'01', strikes:4, warnings:3, isKuddus:true },
+        { _id:'u6', name:'Sneha Reddy', email:'sneha@demo.com', password:'demo123', role:'student', class:'10-A', rollNo:'12', strikes:0, warnings:0 },
+        { _id:'u7', name:'Vikram Patel', email:'vikram@demo.com', password:'demo123', role:'student', class:'10-A', rollNo:'34', strikes:1, warnings:2 },
+        { _id:'u8', name:'Ananya Das', email:'ananya@demo.com', password:'demo123', role:'student', class:'10-A', rollNo:'08', strikes:0, warnings:0 },
+      ],
+      complaints: [
+        { _id:'c1', category:'Bribe', description:'Captain Kuddus collected ₹50 from each student for "class decoration" but never showed any receipts or decorations. Total collected around ₹2,400.', image:null, status:'pending', createdAt: now-86400000*2, anonymous:true, strikesRecommended:1 },
+        { _id:'c2', category:'Tiffin Theft', description:'Multiple students reported their tiffin boxes missing during recess. Kuddus was seen taking food items from the classroom cupboard.', image:null, status:'approved', createdAt: now-86400000*5, anonymous:true, strikesRecommended:2 },
+        { _id:'c3', category:'Fake Rules', description:'Kuddus imposed a "no bathroom break during last period" rule and punishes anyone who asks. This is not a school policy.', image:null, status:'resolved', createdAt: now-86400000*10, anonymous:true, resolution:'Rule revoked. Captain warned.', strikesRecommended:1 },
+        { _id:'c4', category:'Huge Syllabus', description:'Kuddus forced the class to complete 3 extra chapters beyond the syllabus for his own assessment records, causing extreme stress.', image:null, status:'pending', createdAt: now-86400000*1, anonymous:true, strikesRecommended:1 },
+        { _id:'c5', category:'Seat Problem', description:'Kuddus rearranged seats so that all students who complained about him are seated at the back near the dustbin.', image:null, status:'approved', createdAt: now-86400000*3, anonymous:true, strikesRecommended:1 },
+        { _id:'c6', category:'Bribe', description:'Charged ₹20 per student for "seat allocation preference". Students who paid got front rows.', image:null, status:'rejected', createdAt: now-86400000*7, anonymous:true, rejectionReason:'Insufficient evidence. Re-investigation initiated.' },
+        { _id:'c7', category:'Others', description:'Kuddus threatens to mark students absent if they do not obey his personal commands like carrying his bag.', image:null, status:'pending', createdAt: now-3600000*6, anonymous:true, strikesRecommended:2 },
+        { _id:'c8', category:'Tiffin Theft', description:'Caught eating from another student\'s tiffin without permission. When confronted, gave a strike to the student.', image:null, status:'approved', createdAt: now-86400000*4, anonymous:true, strikesRecommended:2 },
+        { _id:'c9', category:'Fake Rules', description:'Created a rule that only his friends can use the class whiteboard during free periods.', image:null, status:'resolved', createdAt: now-86400000*12, anonymous:true, resolution:'Rule abolished. Issue discussed in class meeting.', strikesRecommended:1 },
+        { _id:'c10', category:'Seat Problem', description:'Forced a student with vision issues to sit at the back because they didn\'t bring him chocolates.', image:null, status:'pending', createdAt: now-3600000*3, anonymous:true, strikesRecommended:2 },
+      ],
+      sosAlerts: [
+        { _id:'s1', message:'Kuddus is threatening to fail students who don\'t pay for his birthday gift', location:'Class 10-A', status:'active', createdAt: now-3600000*2, urgency:'high' },
+        { _id:'s2', message:'Physical intimidation during recess — pushing students who questioned seat changes', location:'Playground', status:'resolved', createdAt: now-86400000*3, urgency:'critical' },
+        { _id:'s3', message:'Confiscated a student\'s phone and demanding ₹100 to return it', location:'Class 10-A', status:'active', createdAt: now-3600000*5, urgency:'high' },
+      ],
+      notifications: [
+        { _id:'n1', title:'New complaint filed', message:'A Bribe complaint has been anonymously submitted', time: now-3600000*2, read:false, type:'complaint' },
+        { _id:'n2', title:'SOS Alert', message:'High urgency alert from Class 10-A', time: now-3600000*5, read:false, type:'sos' },
+        { _id:'n3', title:'Complaint resolved', message:'Fake Rules complaint #c9 has been marked as resolved', time: now-86400000*1, read:true, type:'success' },
+        { _id:'n4', title:'Strike issued', message:'Kodu Kuddus has received strike #4', time: now-86400000*2, read:true, type:'warning' },
+      ],
+      seatingPlan: {
+        rows: 6, cols: 8,
+        seats: [
+          {r:0,c:0,studentId:'u2',type:'teacher'}, 
+          {r:0,c:3,studentId:'u5',type:'kuddus'},  
+          {r:0,c:4,studentId:'u3',type:'captain'}, 
+          {r:0,c:5,studentId:'u4',type:'captain'}, 
+          {r:1,c:1,studentId:'u6'},
+          {r:1,c:2,studentId:'u8'},
+          {r:1,c:5,studentId:'u1'},
+          {r:2,c:0,studentId:'u7'},
+          {r:2,c:6,studentId:'u6'},
+          {r:3,c:2,studentId:'u8'},
+          {r:3,c:4,studentId:'u1'},
+          {r:3,c:7,studentId:'u7'},
+        ]
+      },
+      activity: [
+        { _id:'a1', type:'complaint', text:'Anonymous complaint filed — Bribe category', time: now-3600000*2, icon:'file-warning', color:'var(--accent)' },
+        { _id:'a2', type:'sos', text:'SOS alert triggered from Class 10-A', time: now-3600000*5, icon:'siren', color:'var(--warning)' },
+        { _id:'a3', type:'resolve', text:'Complaint #c9 marked as resolved by Mrs. Iyer', time: now-86400000*1, icon:'check-circle', color:'var(--success)' },
+        { _id:'a4', type:'strike', text:'Strike #4 issued to Kodu Kuddus', time: now-86400000*2, icon:'alert-octagon', color:'var(--danger)' },
+        { _id:'a5', type:'complaint', text:'Anonymous complaint filed — Seat Problem', time: now-3600000*3, icon:'file-warning', color:'var(--accent)' },
+        { _id:'a6', type:'approve', text:'Complaint #c2 approved for investigation', time: now-86400000*4, icon:'shield-check', color:'var(--info)' },
+      ],
+      moneyCollected: { byKuddus: 4250, legitimate: 1200 },
+      stats: { totalStrikes: 4, totalWarnings: 3 }
+    };
+  },
+  find(collection) { return this._data[collection] || []; },
+  findById(collection, id) { return (this._data[collection]||[]).find(x=>x._id===id); },
+  insert(collection, doc) {
+    doc._id = doc._id || Math.random().toString(36).slice(2,10);
+    if(!this._data[collection]) this._data[collection] = [];
+    this._data[collection].unshift(doc);
+    this.save();
+    return doc;
+  },
+  update(collection, id, updates) {
+    const item = this.findById(collection, id);
+    if(item) Object.assign(item, updates);
+    this.save();
+    return item;
+  },
+  delete(collection, id) {
+    this._data[collection] = this._data[collection].filter(x=>x._id!==id);
+    this.save();
+  }
+};
+
+// ─── AUTH LAYER ──────────────────────────────────────────────
+const Auth = {
+  current: null,
+  login(email, password) {
+    const user = DB.find('users').find(u => u.email === email && u.password === password);
+    if (!user) return { error: 'Invalid credentials' };
+    this.current = { ...user };
+    delete this.current.password;
+    const token = btoa(JSON.stringify({ id: user._id, role: user.role, ts: Date.now() }));
+    localStorage.setItem('akp_token_neon', token);
+    localStorage.setItem('akp_user_neon', JSON.stringify(this.current));
+    return { user: this.current, token };
+  },
+  logout() {
+    this.current = null;
+    localStorage.removeItem('akp_token_neon');
+    localStorage.removeItem('akp_user_neon');
+  },
+  restore() {
+    const saved = localStorage.getItem('akp_user_neon');
+    if (saved) { this.current = JSON.parse(saved); return true; }
+    return false;
+  },
+  hasRole(...roles) {
+    return this.current && roles.includes(this.current.role);
+  }
+};
+
+// ─── AI LAYER (Simulated Gemini API) ──────────────────────────
+const AI = {
+  async summarizeSyllabus(subject, topic) {
+    const summaries = {
+      'Mathematics-Trigonometry': `**Trigonometry — Key Summary**\n\n1. **Basic Ratios**: sin θ = P/H, cos θ = B/H, tan θ = P/B\n2. **Pythagorean Identity**: sin²θ + cos²θ = 1\n3. **Reciprocal Relations**: cosec θ = 1/sin θ, sec θ = 1/cos θ, cot θ = 1/tan θ\n4. **Quotient Relations**: tan θ = sin θ/cos θ, cot θ = cos θ/sin θ\n5. **Key Formulas**:\n   • sin(A+B) = sinA·cosB + cosA·sinB\n   • cos(A+B) = cosA·cosB - sinA·sinB\n   • tan(A+B) = (tanA+tanB)/(1-tanA·tanB)\n6. **Values at Standard Angles**: 0°, 30°, 45°, 60°, 90°\n7. **Applications**: Height & distance problems, angle of elevation/depression\n\n**Exam Tip**: Focus on proving identities using LHS=RHS approach. Most questions derive from the fundamental Pythagorean identity.`,
+      'Physics-Light': `**Light: Reflection & Refraction — Summary**\n\n1. **Laws of Reflection**: Angle of incidence = Angle of reflection; incident ray, reflected ray, and normal lie in the same plane\n2. **Spherical Mirrors**: Concave (converging) & Convex (diverging)\n3. **Mirror Formula**: 1/f = 1/u + 1/v\n4. **Magnification**: m = -v/u = h'/h\n5. **Sign Convention**: Distances measured from pole; positive in direction of incident light\n6. **Refraction**: Bending of light when passing between media\n7. **Snell's Law**: n₁sinθ₁ = n₂sinθ₂\n8. **Refractive Index**: n = c/v\n9. **Lens Formula**: 1/f = 1/v - 1/u\n10. **Power of Lens**: P = 1/f (in meters), unit: Dioptre\n\n**Exam Tip**: Ray diagrams are crucial — practice image formation for all cases of concave mirrors and convex lenses.`,
+      'default': `**${topic || subject} — AI Summary**\n\nThis topic covers fundamental concepts that build upon prior knowledge. Key areas include:\n\n1. **Core Definitions**: Understanding the basic terminology and principles\n2. **Key Formulas**: Mathematical relationships that govern the topic\n3. **Applications**: Real-world usage and problem-solving techniques\n4. **Common Pitfalls**: Mistakes students typically make\n5. **Exam Strategy**: Focus on conceptual clarity over memorization\n\n**Recommendation**: Practice 10-15 problems varying in difficulty. Review past exam questions for pattern recognition.\n\n*Note: This is a simulated AI response. In production, this connects to Google Gemini API for real-time syllabus analysis.*`
+    };
+    await new Promise(r => setTimeout(r, 1500)); 
+    return summaries[`${subject}-${topic}`] || summaries['default'];
+  },
+  async factCheck(claim) {
+    await new Promise(r => setTimeout(r, 1800));
+    const lowerClaim = claim.toLowerCase();
+    let verdict, confidence, evidence;
+    if (lowerClaim.includes('kuddus') && (lowerClaim.includes('bribe') || lowerClaim.includes('money'))) {
+      verdict = 'LIKELY TRUE'; confidence = 87;
+      evidence = [
+        '3 anonymous complaints reference monetary demands by the captain',
+        'Pattern consistent with reported "class decoration" collection (₹2,400)',
+        'No official school fee collection records found for said amounts',
+        'Cross-referenced with seating plan complaints — paid students moved to front rows'
+      ];
+    } else if (lowerClaim.includes('tiffin')) {
+      verdict = 'LIKELY TRUE'; confidence = 79;
+      evidence = [
+        '2 complaints filed regarding tiffin theft',
+        'Witness accounts place the captain near the cupboard during recess',
+        'Pattern of retaliation against students who reported the issue',
+        'Previous warning issued for similar behavior'
+      ];
+    } else if (lowerClaim.includes('rule') || lowerClaim.includes('fake')) {
+      verdict = 'TRUE'; confidence = 92;
+      evidence = [
+        'No school policy document supports the described rule',
+        'Class teacher confirmed no such rule was authorized',
+        'Multiple student testimonies corroborate the claim',
+        'Rule appears to be captain\'s personal imposition'
+      ];
+    } else {
+      verdict = 'NEEDS INVESTIGATION'; confidence = 55;
+      evidence = [
+        'Insufficient data to verify this specific claim',
+        'No matching complaints found in the system',
+        'Recommend gathering additional witness testimonies',
+        'Cross-reference with academic records recommended'
+      ];
+    }
+    return { verdict, confidence, evidence };
+  }
+};
+
+// ─── SOCKET LAYER (Simulated Socket.io) ───────────────────────
+const Socket = {
+  emit(event, data) {
+    setTimeout(() => {
+      if (event === 'new_complaint') {
+        Toast.show('New anonymous complaint received', 'success');
+        DB.insert('notifications', { title:'New complaint filed', message:`${data.category} complaint submitted anonymously`, time:Date.now(), read:false, type:'complaint' });
+        App.updateNotifBadge();
+      } else if (event === 'sos') {
+        Toast.show('🚨 SOS ALERT received!', 'danger');
+        DB.insert('notifications', { title:'SOS Alert', message:`${data.message}`, time:Date.now(), read:false, type:'sos' });
+        App.updateNotifBadge();
+      }
+    }, 300);
+  }
+};
+
+// ─── TOAST SYSTEM ─────────────────────────────────────────────
+const Toast = {
+  show(msg, type='info', duration=3500) {
+    const container = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = { success:'check-circle', warning:'alert-triangle', danger:'alert-octagon', info:'info' };
+    const colors = { success:'var(--success)', warning:'var(--warning)', danger:'var(--danger)', info:'var(--accent)' };
+    t.innerHTML = `<i data-lucide="${icons[type]||'info'}" style="width:20px;height:20px;color:${colors[type]||'var(--accent)'};flex-shrink:0;margin-top:1px"></i><div style="flex:1;font-size:14px;color:var(--fg)">${msg}</div>`;
+    container.appendChild(t);
+    lucide.createIcons();
+    setTimeout(() => { t.classList.add('out'); setTimeout(()=>t.remove(), 300); }, duration);
+  }
+};
+
+// ─── MODAL SYSTEM ─────────────────────────────────────────────
+const Modal = {
+  open(html) {
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('show');
+    lucide.createIcons();
+  },
+  close() { document.getElementById('modalOverlay').classList.remove('show'); }
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff/60000), hrs = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
+  if (days > 0) return `${days}d ago`;
+  if (hrs > 0) return `${hrs}h ago`;
+  if (mins > 0) return `${mins}m ago`;
+  return 'just now';
+}
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }); }
+
+const CAT_META = {
+  'Bribe':       { icon:'banknote',     color:'#f5b544', bg:'rgba(245,181,68,0.1)' },
+  'Tiffin Theft':{ icon:'cookie',       color:'#ff003c', bg:'rgba(255,0,60,0.1)' },
+  'Huge Syllabus':{icon:'book-open',    color:'#00f3ff', bg:'rgba(0,243,255,0.1)' },
+  'Fake Rules':  { icon:'scroll-text',  color:'#bc13fe', bg:'rgba(188,19,254,0.1)' },
+  'Seat Problem':{ icon:'armchair',     color:'#00f3ff', bg:'rgba(0,243,255,0.1)' },
+  'Others':      { icon:'file-text',    color:'#ff00e5', bg:'rgba(255,0,229,0.1)' }
+};
+
+const NAV_CONFIG = [
+  { id:'dashboard', label:'Dashboard', icon:'layout-dashboard', roles:['student','teacher','captain2','captain3'] },
+  { id:'complaints', label:'Complaints', icon:'file-warning', roles:['student','teacher','captain2','captain3'] },
+  { id:'sos', label:'SOS Alert', icon:'siren', roles:['student','teacher','captain2','captain3'] },
+  { id:'seating', label:'Seating Plan', icon:'grid-3x3', roles:['teacher','captain2','captain3'] },
+  { id:'syllabus', label:'AI Syllabus', icon:'sparkles', roles:['student','teacher','captain2','captain3'] },
+  { id:'factcheck', label:'Fact Check', icon:'search-check', roles:['teacher','captain2','captain3'] },
+  { id:'users', label:'Student Records', icon:'users', roles:['teacher'] },
+  { id:'settings', label:'Settings', icon:'settings', roles:['student','teacher','captain2','captain3'] },
+];
+
+// ─── MAIN APP ─────────────────────────────────────────────────
+const App = {
+  currentView: 'dashboard',
+  charts: {},
+
+  init() {
+    DB.init();
+    if (Auth.restore()) { this.showApp(); } else { this.showLogin(); }
+    this.bindLogin();
+  },
+
+  showLogin() {
+    document.getElementById('loginScreen').style.display = 'grid';
+    document.getElementById('appShell').style.display = 'none';
+    lucide.createIcons();
+  },
+
+  showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    this.renderSidebar();
+    this.renderUser();
+    this.navigate('dashboard');
+    this.updateNotifBadge();
+    setInterval(() => this.simulateRealtime(), 45000);
+  },
+
+  simulateRealtime() {
+    if (Math.random() > 0.6) {
+      const msgs = ['New complaint filed anonymously', 'A complaint status was updated', 'System backup completed'];
+      Toast.show(msgs[Math.floor(Math.random()*msgs.length)], 'info');
+    }
+  },
+
+  renderSidebar() {
+    const nav = document.getElementById('navMenu');
+    nav.innerHTML = NAV_CONFIG.filter(n => n.roles.includes(Auth.current.role)).map(n => {
+      const badge = n.id === 'complaints' ? DB.find('complaints').filter(c=>c.status==='pending').length : 
+                    n.id === 'sos' ? DB.find('sosAlerts').filter(s=>s.status==='active').length : 0;
+      return `<div class="nav-item" data-view="${n.id}" onclick="App.navigate('${n.id}')">
+        <i data-lucide="${n.icon}"></i>
+        <span>${n.label}</span>
+        ${badge > 0 ? `<span class="nav-badge">${badge}</span>` : ''}
+      </div>`;
+    }).join('');
+    lucide.createIcons();
+  },
+
+  renderUser() {
+    const u = Auth.current;
+    const colors = { student:'#00f3ff', teacher:'#00ff9d', captain2:'#ff00e5', captain3:'#f5b544' };
+    const roleLabels = { student:'Student', teacher:'Teacher (Admin)', captain2:'Second Captain', captain3:'Third Captain' };
+    const el = document.getElementById('userAvatar');
+    el.style.background = colors[u.role] + '20';
+    el.style.color = colors[u.role];
+    el.style.border = `1px solid ${colors[u.role]}`;
+    el.style.boxShadow = `0 0 10px ${colors[u.role]}50`;
+    el.textContent = u.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+    document.getElementById('userName').textContent = u.name;
+    document.getElementById('userRole').textContent = roleLabels[u.role];
+  },
+
+  navigate(view) {
+    this.currentView = view;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+    const titles = {
+      dashboard: ['Dashboard', 'Overview of all protocol activity'],
+      complaints: ['Complaint Portal', 'Anonymous misconduct reports'],
+      sos: ['SOS Emergency', 'Immediate distress alerts'],
+      seating: ['Seating Plan', 'Classroom arrangement management'],
+      syllabus: ['AI Syllabus Assistant', 'Intelligent topic summaries'],
+      factcheck: ['Fact Checker', 'AI-powered claim verification'],
+      users: ['Student Records', 'Manage student information'],
+      settings: ['Settings', 'Account & security configuration'],
+    };
+    const [t, s] = titles[view] || ['', ''];
+    document.getElementById('pageTitle').textContent = t;
+    document.getElementById('pageSub').textContent = s;
+    document.getElementById('sidebar').classList.remove('open');
+    this.renderView(view);
+  },
+
+  renderView(view) {
+    const c = document.getElementById('content');
+    c.innerHTML = '';
+    const viewEl = document.createElement('div');
+    viewEl.className = 'view';
+    c.appendChild(viewEl);
+
+    switch(view) {
+      case 'dashboard': Views.dashboard(viewEl); break;
+      case 'complaints': Views.complaints(viewEl); break;
+      case 'sos': Views.sos(viewEl); break;
+      case 'seating': Views.seating(viewEl); break;
+      case 'syllabus': Views.syllabus(viewEl); break;
+      case 'factcheck': Views.factcheck(viewEl); break;
+      case 'users': Views.users(viewEl); break;
+      case 'settings': Views.settings(viewEl); break;
+    }
+    lucide.createIcons();
+  },
+
+  updateNotifBadge() {
+    const unread = DB.find('notifications').filter(n => !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    if (unread > 0) { badge.textContent = unread; badge.style.display = 'grid'; }
+    else { badge.style.display = 'none'; }
+  },
+
+  showNotifications() {
+    const notifs = DB.find('notifications').slice(0, 10);
+    const html = `<div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-display text-lg font-bold" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Notifications</h3>
+        <button class="btn btn-ghost" onclick="App.markAllRead()">Mark all read</button>
+      </div>
+      <div class="space-y-2 max-h-96 overflow-y-auto">
+        ${notifs.map(n => {
+          const colors = { complaint:'var(--accent)', sos:'var(--warning)', success:'var(--success)', warning:'var(--danger)' };
+          const icons = { complaint:'file-warning', sos:'siren', success:'check-circle', warning:'alert-octagon' };
+          return `<div class="flex gap-3 p-3 rounded-lg" style="background:rgba(0,0,0,0.3);border:1px solid ${n.read?'var(--border)':'var(--accent)'}">
+            <div style="width:36px;height:36px;border-radius:10px;background:${colors[n.type]}20;display:grid;place-items:center;flex-shrink:0">
+              <i data-lucide="${icons[n.type]}" style="width:18px;height:18px;color:${colors[n.type]}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold" style="color:var(--fg)">${n.title}</div>
+              <div class="text-xs" style="color:var(--fg-dim)">${n.message}</div>
+              <div class="text-xs font-mono mt-1" style="color:var(--muted)">${timeAgo(n.time)}</div>
+            </div>
+            ${!n.read ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px;box-shadow:0 0 5px var(--accent)"></span>' : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+    Modal.open(html);
+  },
+
+  markAllRead() {
+    DB.find('notifications').forEach(n => n.read = true);
+    DB.save();
+    this.updateNotifBadge();
+    Modal.close();
+    Toast.show('All notifications marked as read', 'success');
+  },
+
+  logout() {
+    Auth.logout();
+    this.showLogin();
+    Toast.show('Signed out securely', 'info');
+  },
+
+  bindLogin() {
+    let selectedRole = 'student';
+    document.querySelectorAll('#roleTabs .role-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('#roleTabs .role-tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        selectedRole = t.dataset.role;
+        const emails = { student:'student@demo.com', teacher:'teacher@demo.com', captain2:'captain2@demo.com', captain3:'captain3@demo.com' };
+        document.getElementById('loginEmail').value = emails[selectedRole];
+        document.getElementById('loginPassword').value = 'demo123';
+      });
+    });
+
+    document.getElementById('pwToggle').addEventListener('click', () => {
+      const inp = document.getElementById('loginPassword');
+      const icon = document.getElementById('pwIcon');
+      if (inp.type === 'password') { inp.type = 'text'; icon.setAttribute('data-lucide','eye-off'); }
+      else { inp.type = 'password'; icon.setAttribute('data-lucide','eye'); }
+      lucide.createIcons();
+    });
+
+    document.getElementById('forgotLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      Modal.open(`<div class="p-6">
+        <h3 class="font-display text-xl font-bold mb-2" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Reset Password</h3>
+        <p class="text-sm mb-4" style="color:var(--fg-dim)">Enter your email and we'll send a reset link.</p>
+        <input type="email" class="form-input mb-4" placeholder="you@veritas.edu">
+        <div class="flex gap-3">
+          <button class="btn btn-ghost flex-1 justify-center" onclick="Modal.close()">Cancel</button>
+          <button class="btn btn-primary flex-1 justify-center" onclick="Modal.close();Toast.show('Reset link sent to your email','success')">Send Reset Link</button>
+        </div>
+      </div>`);
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const result = Auth.login(email, password);
+      if (result.error) { Toast.show(result.error, 'danger'); return; }
+      Toast.show(`Welcome, ${result.user.name}!`, 'success');
+      this.showApp();
+    });
+  }
+};
+
+// ─── VIEWS ────────────────────────────────────────────────────
+const Views = {
+
+  dashboard(el) {
+    const complaints = DB.find('complaints');
+    const sos = DB.find('sosAlerts');
+    const students = DB.find('users').filter(u=>u.role==='student');
+    const today = new Date().setHours(0,0,0,0);
+    const todayComplaints = complaints.filter(c => c.createdAt >= today).length;
+    const activity = DB.find('activity').slice(0,6);
+
+    el.innerHTML = `
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        ${Views._statCard('Total Students', students.length, 'users', '#00f3ff', 'rgba(0, 243, 255, 0.15)')}
+        ${Views._statCard('Total Complaints', complaints.length, 'file-warning', '#bc13fe', 'rgba(188, 19, 254, 0.15)')}
+        ${Views._statCard('SOS Alerts', sos.filter(s=>s.status==='active').length, 'siren', '#f5b544', 'rgba(245, 181, 68, 0.15)')}
+        ${Views._statCard('Warnings Issued', DB._data.stats.totalWarnings, 'alert-triangle', '#00ff9d', 'rgba(0, 255, 157, 0.15)')}
+        ${Views._statCard('Strikes Issued', DB._data.stats.totalStrikes, 'alert-octagon', '#ff003c', 'rgba(255, 0, 60, 0.15)')}
+        ${Views._statCard("Today's Complaints", todayComplaints, 'clock', '#ff00e5', 'rgba(255, 0, 229, 0.15)')}
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6 mb-6">
+        <div class="card lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-display font-bold text-lg" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Complaint Statistics</h3>
+              <p class="text-xs font-mono" style="color:var(--muted)">Last 7 days · By category</p>
+            </div>
+            <div class="flex gap-2 text-xs font-mono">
+              <span style="color:var(--accent)">● Filed</span>
+              <span style="color:var(--success)">● Resolved</span>
+            </div>
+          </div>
+          <canvas id="chartComplaints" height="120"></canvas>
+        </div>
+        <div class="card">
+          <h3 class="font-display font-bold text-lg mb-1" style="color:var(--accent-2);text-shadow:0 0 8px rgba(188,19,254,0.5)">SOS Statistics</h3>
+          <p class="text-xs mb-4 font-mono" style="color:var(--muted)">Alert urgency distribution</p>
+          <canvas id="chartSOS" height="160"></canvas>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="card lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display font-bold text-lg" style="color:var(--success);text-shadow:0 0 8px rgba(0,255,157,0.5)">Money Collected</h3>
+            <span class="font-mono text-xs px-2 py-1 rounded" style="background:rgba(255,0,60,0.1);color:var(--danger);border:1px solid var(--danger)">₹4,250 unaccounted</span>
+          </div>
+          <canvas id="chartMoney" height="100"></canvas>
+          <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t" style="border-color:var(--border)">
+            <div>
+              <div class="text-xs font-mono" style="color:var(--muted)">By Kuddus (disputed)</div>
+              <div class="font-mono text-2xl font-bold" style="color:var(--danger);text-shadow:0 0 8px var(--danger)">₹4,250</div>
+            </div>
+            <div>
+              <div class="text-xs font-mono" style="color:var(--muted)">Legitimate (receipted)</div>
+              <div class="font-mono text-2xl font-bold" style="color:var(--success);text-shadow:0 0 8px var(--success)">₹1,200</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="font-display font-bold text-lg mb-4" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Recent Activity</h3>
+          <div class="space-y-0">
+            ${activity.map(a => `
+              <div class="activity-item">
+                <div class="activity-dot" style="background:${a.color}20;border:1px solid ${a.color}">
+                  <i data-lucide="${a.icon}" style="width:16px;height:16px;color:${a.color}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm" style="color:var(--fg)">${a.text}</div>
+                  <div class="text-xs font-mono" style="color:var(--muted)">${timeAgo(a.time)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    setTimeout(() => Views._initCharts(), 100);
+  },
+
+  _statCard(label, value, icon, color, bg) {
+    return `<div class="stat-card" style="--card-color:${color};border-color:${color}30">
+      <div class="flex items-start justify-between mb-3">
+        <div style="width:40px;height:40px;border-radius:10px;background:${bg};display:grid;place-items:center;border:1px solid ${color}50">
+          <i data-lucide="${icon}" style="width:20px;height:20px;color:${color}"></i>
+        </div>
+      </div>
+      <div class="font-mono text-3xl font-bold" style="color:${color};text-shadow:0 0 10px ${color}80">${value}</div>
+      <div class="text-xs mt-1 font-mono" style="color:var(--fg-dim)">${label}</div>
+    </div>`;
+  },
+
+  _initCharts() {
+    Chart.defaults.color = '#a0aec0';
+    Chart.defaults.borderColor = 'rgba(0, 243, 255, 0.05)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const ctx1 = document.getElementById('chartComplaints');
+    if (ctx1) {
+      if (App.charts.c1) App.charts.c1.destroy();
+      App.charts.c1 = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets: [
+            { label:'Filed', data:[3,5,2,7,4,6,3], borderColor:'#00f3ff', backgroundColor:'rgba(0,243,255,0.1)', tension:0.4, fill:true, borderWidth:2, pointBackgroundColor:'#00f3ff' },
+            { label:'Resolved', data:[1,3,2,4,3,5,2], borderColor:'#00ff9d', backgroundColor:'rgba(0,255,157,0.1)', tension:0.4, fill:true, borderWidth:2, pointBackgroundColor:'#00ff9d' }
+          ]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, grid:{color:'rgba(0, 243, 255, 0.05)'} }, x:{grid:{display:false}} } }
+      });
+    }
+
+    const ctx2 = document.getElementById('chartSOS');
+    if (ctx2) {
+      if (App.charts.c2) App.charts.c2.destroy();
+      App.charts.c2 = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Critical','High','Medium'],
+          datasets: [{ data:[1,4,2], backgroundColor:['#ff003c','#f5b544','#00f3ff'], borderWidth:0 }]
+        },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{position:'bottom',labels:{padding:15,font:{size:11}}} } }
+      });
+    }
+
+    const ctx3 = document.getElementById('chartMoney');
+    if (ctx3) {
+      if (App.charts.c3) App.charts.c3.destroy();
+      App.charts.c3 = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: ['Week 1','Week 2','Week 3','Week 4'],
+          datasets: [
+            { label:'Disputed', data:[800,1200,1000,1250], backgroundColor:'#ff003c', borderRadius:6 },
+            { label:'Legitimate', data:[300,400,200,300], backgroundColor:'#00ff9d', borderRadius:6 }
+          ]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, grid:{color:'rgba(0, 243, 255, 0.05)'} }, x:{grid:{display:false}} } }
+      });
+    }
+  },
+
+  complaints(el) {
+    const isStudent = Auth.current.role === 'student';
+    const complaints = DB.find('complaints');
+
+    el.innerHTML = `
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn btn-ghost filter-btn active" data-filter="all">All (${complaints.length})</button>
+          <button class="btn btn-ghost filter-btn" data-filter="pending">Pending (${complaints.filter(c=>c.status==='pending').length})</button>
+          <button class="btn btn-ghost filter-btn" data-filter="approved">Approved (${complaints.filter(c=>c.status==='approved').length})</button>
+          <button class="btn btn-ghost filter-btn" data-filter="resolved">Resolved (${complaints.filter(c=>c.status==='resolved').length})</button>
+          <button class="btn btn-ghost filter-btn" data-filter="rejected">Rejected (${complaints.filter(c=>c.status==='rejected').length})</button>
+        </div>
+        ${isStudent ? '<button class="btn btn-primary" onclick="Views.openComplaintForm()"><i data-lucide="plus" style="width:16px;height:16px"></i> File Anonymous Complaint</button>' : ''}
+      </div>
+      <div id="complaintList" class="space-y-3"></div>
+    `;
+
+    function renderList(filter='all') {
+      const filtered = filter === 'all' ? complaints : complaints.filter(c=>c.status===filter);
+      const list = document.getElementById('complaintList');
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="card text-center py-12"><i data-lucide="inbox" style="width:48px;height:48px;color:var(--muted);margin:0 auto 12px"></i><div style="color:var(--fg-dim)">No complaints found</div></div>`;
+        lucide.createIcons(); return;
+      }
+      list.innerHTML = filtered.map(c => {
+        const meta = CAT_META[c.category] || CAT_META['Others'];
+        return `<div class="card cursor-pointer" onclick="Views.viewComplaint('${c._id}')" style="border-color:${meta.color}30">
+          <div class="flex items-start gap-4">
+            <div class="cat-icon" style="background:${meta.bg};border:1px solid ${meta.color}50;box-shadow:0 0 10px ${meta.color}20">
+              <i data-lucide="${meta.icon}" style="width:20px;height:20px;color:${meta.color}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <span class="font-semibold" style="color:var(--fg)">${c.category}</span>
+                <span class="badge badge-${c.status}">${c.status}</span>
+                <span class="font-mono text-xs" style="color:var(--muted)">#${c._id}</span>
+              </div>
+              <p class="text-sm" style="color:var(--fg-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description}</p>
+              <div class="flex items-center gap-4 mt-2 text-xs font-mono" style="color:var(--muted)">
+                <span><i data-lucide="clock" style="width:12px;height:12px;display:inline"></i> ${timeAgo(c.createdAt)}</span>
+                <span><i data-lucide="shield" style="width:12px;height:12px;display:inline"></i> Anonymous</span>
+                ${c.strikesRecommended ? `<span style="color:var(--danger)"><i data-lucide="alert-octagon" style="width:12px;height:12px;display:inline"></i> ${c.strikesRecommended} strike(s) recommended</span>` : ''}
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:20px;height:20px;color:var(--accent);flex-shrink:0"></i>
+          </div>
+        </div>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    renderList();
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(x => { x.classList.remove('active'); x.style.background=''; x.style.color=''; x.style.borderColor=''; });
+        b.classList.add('active');
+        b.style.background = 'rgba(0, 243, 255, 0.1)';
+        b.style.color = 'var(--accent)';
+        b.style.borderColor = 'var(--accent)';
+        renderList(b.dataset.filter);
+      });
+    });
+    const firstActive = document.querySelector('.filter-btn.active');
+    if (firstActive) { firstActive.style.background = 'rgba(0, 243, 255, 0.1)'; firstActive.style.color = 'var(--accent)'; firstActive.style.borderColor = 'var(--accent)'; }
+  },
+
+  openComplaintForm() {
+    const cats = Object.keys(CAT_META);
+
+    Modal.open(`<div class="p-6">
+      <div class="flex items-center gap-3 mb-6">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,243,255,0.1);display:grid;place-items:center;border:1px solid var(--accent)">
+          <i data-lucide="file-warning" style="width:22px;height:22px;color:var(--accent)"></i>
+        </div>
+        <div>
+          <h3 class="font-display text-xl font-bold" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">File Anonymous Complaint</h3>
+          <p class="text-xs font-mono" style="color:var(--muted)">Your identity will remain completely hidden</p>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <label class="form-label">Select Category</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="catGrid">
+          ${cats.map(c => {
+            const m = CAT_META[c];
+            return `<div class="cat-card" data-cat="${c}" onclick="document.querySelectorAll('#catGrid .cat-card').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">
+              <div class="cat-icon" style="background:${m.bg};border:1px solid ${m.color}50"><i data-lucide="${m.icon}" style="width:20px;height:20px;color:${m.color}"></i></div>
+              <div class="text-sm font-medium" style="color:var(--fg)">${c}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="compDesc" placeholder="Provide detailed information about the incident. Include dates, times, and any witnesses if possible. The more detail you provide, the faster we can investigate."></textarea>
+      </div>
+
+      <div class="mb-5">
+        <label class="form-label">Evidence (Optional)</label>
+        <div id="uploadArea" class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all" style="border-color:var(--border-2)" 
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border-2)'">
+          <input type="file" id="compImage" accept="image/*" style="display:none" onchange="Views.handleUpload(this)">
+          <i data-lucide="upload-cloud" style="width:36px;height:36px;color:var(--accent);margin:0 auto 8px"></i>
+          <div class="text-sm font-medium" style="color:var(--accent)">Click to upload evidence</div>
+          <div class="text-xs font-mono" style="color:var(--muted)">PNG, JPG up to 5MB</div>
+          <div id="imagePreview" class="mt-3" style="display:none">
+            <img id="previewImg" style="max-height:120px;border-radius:8px;margin:0 auto;border:1px solid var(--accent)">
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-lg mb-5 flex gap-3" style="background:rgba(0,255,157,0.05);border:1px solid var(--success)">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:var(--success);flex-shrink:0"></i>
+        <div class="text-xs" style="color:var(--fg-dim)">Your identity is protected by end-to-end anonymity. No metadata, IP addresses, or personally identifiable information will be stored with this complaint.</div>
+      </div>
+
+      <div class="flex gap-3">
+        <button class="btn btn-ghost flex-1 justify-center" onclick="Modal.close()">Cancel</button>
+        <button class="btn btn-primary flex-1 justify-center" onclick="Views.submitComplaint()">
+          <i data-lucide="send" style="width:16px;height:16px"></i> Submit Anonymously
+        </button>
+      </div>
+    </div>`);
+    lucide.createIcons();
+  },
+
+  handleUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('previewImg').src = e.target.result;
+      document.getElementById('imagePreview').style.display = 'block';
+      document.querySelector('#uploadArea > i').style.display = 'none';
+      document.querySelector('#uploadArea > div').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  },
+
+  submitComplaint() {
+    const selected = document.querySelector('#catGrid .cat-card.selected');
+    if (!selected) { Toast.show('Please select a category', 'warning'); return; }
+    const desc = document.getElementById('compDesc').value.trim();
+    if (desc.length < 20) { Toast.show('Description must be at least 20 characters', 'warning'); return; }
+    const img = document.getElementById('previewImg');
+    const complaint = {
+      category: selected.dataset.cat,
+      description: desc,
+      image: img ? img.src : null,
+      status: 'pending',
+      createdAt: Date.now(),
+      anonymous: true,
+      strikesRecommended: Math.ceil(Math.random()*2)
+    };
+    DB.insert('complaints', complaint);
+    DB.insert('activity', { type:'complaint', text:`Anonymous complaint filed — ${complaint.category} category`, time:Date.now(), icon:'file-warning', color:'var(--accent)' });
+    DB.insert('notifications', { title:'New complaint filed', message:`${complaint.category} complaint submitted anonymously`, time:Date.now(), read:false, type:'complaint' });
+    Socket.emit('new_complaint', complaint);
+    Modal.close();
+    Toast.show('Complaint submitted anonymously. Thank you for your courage.', 'success');
+    App.navigate('complaints');
+    App.updateNotifBadge();
+    App.renderSidebar();
+  },
+
+  viewComplaint(id) {
+    const c = DB.findById('complaints', id);
+    if (!c) return;
+    const meta = CAT_META[c.category] || CAT_META['Others'];
+    const canManage = Auth.hasRole('teacher','captain2','captain3');
+    
+    Modal.open(`<div class="p-6">
+      <div class="flex items-start gap-4 mb-6">
+        <div class="cat-icon" style="background:${meta.bg};width:50px;height:50px;border-radius:14px;border:1px solid ${meta.color}50;box-shadow:0 0 15px ${meta.color}30">
+          <i data-lucide="${meta.icon}" style="width:24px;height:24px;color:${meta.color}"></i>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <h3 class="font-display text-xl font-bold" style="color:var(--fg)">${c.category}</h3>
+            <span class="badge badge-${c.status}">${c.status}</span>
+          </div>
+          <div class="font-mono text-xs" style="color:var(--muted)">Complaint #${c._id} · ${fmtDate(c.createdAt)}</div>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <div class="form-label mb-2">Description</div>
+        <div class="p-4 rounded-xl text-sm" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);line-height:1.6;color:var(--fg-dim)">${c.description}</div>
+      </div>
+
+      ${c.image ? `<div class="mb-5"><div class="form-label mb-2">Evidence</div><img src="${c.image}" style="max-width:100%;border-radius:12px;border:1px solid var(--accent)"></div>` : ''}
+
+      ${c.resolution ? `<div class="mb-5 p-4 rounded-xl" style="background:rgba(0,255,157,0.05);border:1px solid var(--success)"><div class="form-label mb-1" style="color:var(--success)">Resolution</div><div class="text-sm" style="color:var(--fg-dim)">${c.resolution}</div></div>` : ''}
+      ${c.rejectionReason ? `<div class="mb-5 p-4 rounded-xl" style="background:rgba(255,0,60,0.05);border:1px solid var(--danger)"><div class="form-label mb-1" style="color:var(--danger)">Rejection Reason</div><div class="text-sm" style="color:var(--fg-dim)">${c.rejectionReason}</div></div>` : ''}
+
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div class="p-3 rounded-lg" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+          <div class="text-xs font-mono" style="color:var(--muted)">Anonymity</div>
+          <div class="text-sm font-medium" style="color:var(--success)">Protected</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+          <div class="text-xs font-mono" style="color:var(--muted)">Strikes Recommended</div>
+          <div class="text-sm font-medium" style="color:var(--danger)">${c.strikesRecommended || 0}</div>
+        </div>
+      </div>
+
+      ${canManage && c.status === 'pending' ? `
+        <div class="flex gap-3">
+          <button class="btn btn-success flex-1 justify-center" onclick="Views.updateComplaintStatus('${c._id}','approved')">
+            <i data-lucide="check" style="width:16px;height:16px"></i> Approve
+          </button>
+          <button class="btn btn-danger flex-1 justify-center" onclick="Views.updateComplaintStatus('${c._id}','rejected')">
+            <i data-lucide="x" style="width:16px;height:16px"></i> Reject
+          </button>
+        </div>
+      ` : ''}
+
+      ${canManage && c.status === 'approved' ? `
+        <button class="btn btn-success w-full justify-center" onclick="Views.updateComplaintStatus('${c._id}','resolved')">
+          <i data-lucide="check-circle" style="width:16px;height:16px"></i> Mark as Resolved
+        </button>
+      ` : ''}
+
+      <button class="btn btn-ghost w-full justify-center mt-3" onclick="Modal.close()">Close</button>
+    </div>`);
+    lucide.createIcons();
+  },
+
+  updateComplaintStatus(id, status) {
+    const updates = { status };
+    if (status === 'resolved') updates.resolution = 'Issue addressed by administration. Appropriate action taken.';
+    if (status === 'rejected') updates.rejectionReason = 'Insufficient evidence after preliminary review.';
+    DB.update('complaints', id, updates);
+    DB.insert('activity', { type:status, text:`Complaint #${id} marked as ${status}`, time:Date.now(), icon:status==='resolved'?'check-circle':status==='approved'?'shield-check':'x-circle', color:status==='resolved'?'var(--success)':status==='approved'?'var(--info)':'var(--danger)' });
+    Modal.close();
+    Toast.show(`Complaint ${status}`, status==='resolved'?'success':status==='approved'?'info':'warning');
+    App.navigate('complaints');
+    App.renderSidebar();
+  },
+
+  sos(el) {
+    const alerts = DB.find('sosAlerts');
+    el.innerHTML = `
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="card lg:col-span-1 text-center">
+          <h3 class="font-display font-bold text-lg mb-2" style="color:var(--danger);text-shadow:0 0 10px var(--danger)">Emergency SOS</h3>
+          <p class="text-xs mb-6 font-mono" style="color:var(--fg-dim)">Press if you or someone is in immediate danger from Kuddus</p>
+          <button class="sos-btn" onclick="Views.triggerSOS()">
+            <div class="sos-pulse"></div>
+            <div style="position:relative;z-index:1">
+              <i data-lucide="siren" style="width:48px;height:48px;color:white"></i>
+              <div class="font-display font-bold text-xl text-white mt-2">SOS</div>
+              <div class="text-xs text-white opacity-80 font-mono">PRESS TO ALERT</div>
+            </div>
+          </button>
+          <div class="mt-6 p-3 rounded-lg text-left" style="background:rgba(255,0,60,0.05);border:1px solid var(--danger)">
+            <div class="flex gap-2 items-start">
+              <i data-lucide="info" style="width:16px;height:16px;color:var(--danger);flex-shrink:0;margin-top:1px"></i>
+              <div class="text-xs" style="color:var(--fg-dim)">SOS alerts instantly notify the teacher and all captains. False alerts will result in disciplinary action.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display font-bold text-lg" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Active Alerts</h3>
+            <span class="font-mono text-xs px-2 py-1 rounded" style="background:rgba(255,0,60,0.1);color:var(--danger);border:1px solid var(--danger)">${alerts.filter(a=>a.status==='active').length} ACTIVE</span>
+          </div>
+          <div class="space-y-3 max-h-96 overflow-y-auto">
+            ${alerts.map(a => {
+              const urgencyColors = { critical:'#ff003c', high:'#f5b544', medium:'#00f3ff' };
+              return `<div class="p-4 rounded-xl" style="background:rgba(0,0,0,0.3);border:1px solid ${urgencyColors[a.urgency]}50;box-shadow:0 0 15px ${urgencyColors[a.urgency]}20">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="badge" style="background:${urgencyColors[a.urgency]}10;color:${urgencyColors[a.urgency]};border:1px solid ${urgencyColors[a.urgency]};text-shadow:0 0 5px ${urgencyColors[a.urgency]}">${a.urgency}</span>
+                    <span class="badge badge-${a.status}">${a.status}</span>
+                  </div>
+                  <span class="font-mono text-xs" style="color:var(--muted)">${timeAgo(a.createdAt)}</span>
+                </div>
+                <p class="text-sm mb-2" style="color:var(--fg)">${a.message}</p>
+                <div class="text-xs font-mono" style="color:var(--muted)"><i data-lucide="map-pin" style="width:12px;height:12px;display:inline"></i> ${a.location}</div>
+                ${a.status==='active' && Auth.hasRole('teacher','captain2','captain3') ? `<button class="btn btn-success mt-3" onclick="Views.resolveSOS('${a._id}')"><i data-lucide="check" style="width:14px;height:14px"></i> Mark Resolved</button>` : ''}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+  },
+
+  triggerSOS() {
+    const message = 'SOS triggered — immediate assistance required';
+    const sos = { message, location:'Class 10-A', status:'active', createdAt:Date.now(), urgency:'high' };
+    DB.insert('sosAlerts', sos);
+    DB.insert('activity', { type:'sos', text:'SOS alert triggered from Class 10-A', time:Date.now(), icon:'siren', color:'var(--warning)' });
+    DB.insert('notifications', { title:'SOS Alert', message, time:Date.now(), read:false, type:'sos' });
+    Socket.emit('sos', sos);
+    Toast.show('🚨 SOS alert sent! Help is on the way.', 'danger', 5000);
+    App.navigate('sos');
+    App.updateNotifBadge();
+    App.renderSidebar();
+  },
+
+  resolveSOS(id) {
+    DB.update('sosAlerts', id, { status:'resolved' });
+    Toast.show('SOS alert resolved', 'success');
+    App.navigate('sos');
+    App.renderSidebar();
+  },
+
+  seating(el) {
+    const plan = DB._data.seatingPlan;
+    el.innerHTML = `
+      <div class="card mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-display font-bold text-lg" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Classroom 10-A Seating Plan</h3>
+            <p class="text-xs font-mono" style="color:var(--muted)">6 rows × 8 columns · 12 students assigned</p>
+          </div>
+          <div class="flex gap-3 text-xs font-mono flex-wrap">
+            <span class="flex items-center gap-1" style="color:var(--teacher)"><span class="w-3 h-3 rounded" style="background:var(--teacher);box-shadow:0 0 5px var(--teacher)"></span> Teacher</span>
+            <span class="flex items-center gap-1" style="color:var(--danger)"><span class="w-3 h-3 rounded" style="background:var(--danger);box-shadow:0 0 5px var(--danger)"></span> Kuddus</span>
+            <span class="flex items-center gap-1" style="color:var(--captain2)"><span class="w-3 h-3 rounded" style="background:var(--captain2);box-shadow:0 0 5px var(--captain2)"></span> Captains</span>
+            <span class="flex items-center gap-1" style="color:var(--student)"><span class="w-3 h-3 rounded" style="background:var(--student);box-shadow:0 0 5px var(--student)"></span> Students</span>
+          </div>
+        </div>
+
+        <div class="flex justify-center mb-4">
+          <div class="seat seat-teacher" style="width:100px;height:36px;border-radius:8px" title="Teacher's Desk">
+            <i data-lucide="presentation" style="width:16px;height:16px"></i>
+            <span class="ml-1 text-xs">Teacher</span>
+          </div>
+        </div>
+
+        <div class="flex justify-center overflow-x-auto">
+          <div class="inline-grid gap-2" style="grid-template-columns:repeat(${plan.cols}, 44px)">
+            ${Array.from({length: plan.rows * plan.cols}, (_, i) => {
+              const r = Math.floor(i / plan.cols);
+              const c = i % plan.cols;
+              const seat = plan.seats.find(s => s.r === r && s.c === c);
+              if (!seat) return `<div class="seat seat-empty">${r+1}${String.fromCharCode(65+c)}</div>`;
+              const student = DB.findById('users', seat.studentId);
+              if (!student) return `<div class="seat seat-empty">${r+1}${String.fromCharCode(65+c)}</div>`;
+              let cls = 'seat-occupied';
+              if (seat.type === 'kuddus' || student.isKuddus) cls = 'seat-kuddus';
+              else if (seat.type === 'captain') cls = 'seat-captain';
+              else if (seat.type === 'teacher') cls = 'seat-teacher';
+              const initials = student.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+              return `<div class="seat ${cls}" title="${student.name} (Roll: ${student.rollNo})">${initials}</div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-xl" style="background:rgba(255,0,60,0.05);border:1px solid var(--danger)">
+          <div class="flex gap-3">
+            <i data-lucide="alert-triangle" style="width:20px;height:20px;color:var(--danger);flex-shrink:0;filter:drop-shadow(0 0 5px var(--danger))"></i>
+            <div>
+              <div class="text-sm font-semibold mb-1" style="color:var(--danger)">Anomaly Detected</div>
+              <div class="text-xs" style="color:var(--fg-dim)">Student complaints indicate that Kuddus has been rearranging seats to punish students who filed complaints against him. Students who complained are now seated at the back rows near the dustbin area. Recommended action: Restore original seating arrangement and issue a warning.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+  },
+
+  syllabus(el) {
+    el.innerHTML = `
+      <div class="card mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(188,19,254,0.1);display:grid;place-items:center;border:1px solid var(--accent-2);box-shadow:0 0 15px rgba(188,19,254,0.2)">
+            <i data-lucide="sparkles" style="width:22px;height:22px;color:var(--accent-2)"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-lg" style="color:var(--accent-2);text-shadow:0 0 8px rgba(188,19,254,0.5)">AI Syllabus Assistant</h3>
+            <p class="text-xs font-mono" style="color:var(--muted)">Powered by Gemini · Generate concise topic summaries</p>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="form-label">Subject</label>
+            <select class="form-select" id="sySubject">
+              <option>Mathematics</option>
+              <option>Physics</option>
+              <option>Chemistry</option>
+              <option>Biology</option>
+              <option>English</option>
+              <option>Social Science</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Topic</label>
+            <input type="text" class="form-input" id="syTopic" placeholder="e.g., Trigonometry, Light, Periodic Table">
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full justify-center" onclick="Views.generateSummary()">
+          <i data-lucide="sparkles" style="width:16px;height:16px"></i> Generate Summary
+        </button>
+      </div>
+
+      <div id="syllabusResult"></div>
+    `;
+    lucide.createIcons();
+  },
+
+  async generateSummary() {
+    const subject = document.getElementById('sySubject').value;
+    const topic = document.getElementById('syTopic').value.trim();
+    if (!topic) { Toast.show('Please enter a topic', 'warning'); return; }
+
+    const result = document.getElementById('syllabusResult');
+    result.innerHTML = `<div class="card">
+      <div class="flex items-center gap-3 mb-4">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(188,19,254,0.1);display:grid;place-items:center">
+          <i data-lucide="sparkles" style="width:18px;height:18px;color:var(--accent-2)"></i>
+        </div>
+        <div>
+          <div class="font-semibold text-sm" style="color:var(--fg)">${subject} — ${topic}</div>
+          <div class="font-mono text-xs" style="color:var(--accent-2)">AI generating summary...</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 py-8 justify-center">
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+      </div>
+    </div>`;
+
+    const summary = await AI.summarizeSyllabus(subject, topic);
+    const cleanHtml = summary.split('\n').map(l => {
+      if (l.trim() === '') return '<br>';
+      return `<div class="text-sm mb-1" style="color:var(--fg-dim);line-height:1.7">${l.replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--accent)">$1</strong>')}</div>`;
+    }).join('');
+
+    result.innerHTML = `<div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(188,19,254,0.1);display:grid;place-items:center">
+            <i data-lucide="sparkles" style="width:18px;height:18px;color:var(--accent-2)"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-sm" style="color:var(--fg)">${subject} — ${topic}</div>
+            <div class="font-mono text-xs" style="color:var(--success)">✓ Summary generated</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost"><i data-lucide="download" style="width:14px;height:14px"></i> Save</button>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+        ${cleanHtml}
+      </div>
+      <div class="mt-3 text-xs font-mono" style="color:var(--muted)">⚠ In production, this connects to Google Gemini API for real-time AI-generated content.</div>
+    </div>`;
+    lucide.createIcons();
+  },
+
+  factcheck(el) {
+    el.innerHTML = `
+      <div class="card mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,243,255,0.1);display:grid;place-items:center;border:1px solid var(--accent);box-shadow:0 0 15px var(--accent-glow)">
+            <i data-lucide="search-check" style="width:22px;height:22px;color:var(--accent)"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-lg" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">AI Fact Checker</h3>
+            <p class="text-xs font-mono" style="color:var(--muted)">Verify claims against complaint database and evidence</p>
+          </div>
+        </div>
+
+        <label class="form-label">Claim to Verify</label>
+        <textarea class="form-textarea mb-4" id="fcClaim" placeholder="e.g., Kuddus collected money from students for class decoration but never showed receipts"></textarea>
+
+        <button class="btn btn-primary w-full justify-center" onclick="Views.runFactCheck()">
+          <i data-lucide="search-check" style="width:16px;height:16px"></i> Run Fact Check
+        </button>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs font-mono" style="color:var(--muted)">Try:</span>
+          <button class="btn btn-ghost" onclick="document.getElementById('fcClaim').value='Kuddus took tiffin from students during recess'">Tiffin theft claim</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('fcClaim').value='Kuddus imposed fake bathroom rules'">Fake rules claim</button>
+        </div>
+      </div>
+
+      <div id="factCheckResult"></div>
+    `;
+    lucide.createIcons();
+  },
+
+  async runFactCheck() {
+    const claim = document.getElementById('fcClaim').value.trim();
+    if (claim.length < 10) { Toast.show('Please enter a longer claim', 'warning'); return; }
+
+    const result = document.getElementById('factCheckResult');
+    result.innerHTML = `<div class="card text-center py-12">
+      <div class="flex items-center gap-2 justify-center mb-4">
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+      </div>
+      <div class="text-sm font-mono" style="color:var(--accent)">Analyzing claim against 127 records...</div>
+    </div>`;
+
+    const fc = await AI.factCheck(claim);
+    const verdictColors = { 'TRUE':'var(--success)', 'LIKELY TRUE':'var(--info)', 'NEEDS INVESTIGATION':'var(--warning)', 'FALSE':'var(--danger)' };
+
+    result.innerHTML = `<div class="card">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-3" style="background:${verdictColors[fc.verdict]}10;border:2px solid ${verdictColors[fc.verdict]};box-shadow:0 0 30px ${verdictColors[fc.verdict]}50">
+          <i data-lucide="${fc.verdict.includes('TRUE')?'check-circle':fc.verdict==='FALSE'?'x-circle':'help-circle'}" style="width:36px;height:36px;color:${verdictColors[fc.verdict]}"></i>
+        </div>
+        <div class="font-display text-2xl font-bold" style="color:${verdictColors[fc.verdict]};text-shadow:0 0 10px ${verdictColors[fc.verdict]}">${fc.verdict}</div>
+        <div class="font-mono text-sm mt-1" style="color:var(--muted)">Confidence: ${fc.confidence}%</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="form-label mb-2">Analyzed Claim</div>
+        <div class="p-3 rounded-lg text-sm italic" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--fg-dim)">"${claim}"</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="form-label mb-2">Evidence & Cross-References</div>
+        <div class="space-y-2">
+          ${fc.evidence.map((e,i) => `
+            <div class="flex gap-3 p-3 rounded-lg" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+              <div style="width:24px;height:24px;border-radius:50%;background:${verdictColors[fc.verdict]}20;display:grid;place-items:center;flex-shrink:0;border:1px solid ${verdictColors[fc.verdict]}">
+                <span class="font-mono text-xs font-bold" style="color:${verdictColors[fc.verdict]}">${i+1}</span>
+              </div>
+              <div class="text-sm" style="color:var(--fg-dim)">${e}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl" style="background:${verdictColors[fc.verdict]}05;border:1px solid ${verdictColors[fc.verdict]}30">
+        <div class="flex gap-3">
+          <i data-lucide="info" style="width:18px;height:18px;color:${verdictColors[fc.verdict]};flex-shrink:0"></i>
+          <div class="text-xs" style="color:var(--fg-dim)">This analysis is generated by AI and cross-references the complaint database. It should be used as supporting evidence, not as definitive proof. All claims require human verification before disciplinary action.</div>
+        </div>
+      </div>
+    </div>`;
+    lucide.createIcons();
+  },
+
+  users(el) {
+    const students = DB.find('users').filter(u=>u.role==='student' || u.isKuddus);
+    el.innerHTML = `
+      <div class="card">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="font-display font-bold text-lg" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Student Records</h3>
+            <p class="text-xs font-mono" style="color:var(--muted)">Class 10-A · ${students.length} students</p>
+          </div>
+          <button class="btn btn-primary"><i data-lucide="user-plus" style="width:14px;height:14px"></i> Add Student</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left" style="border-bottom:1px solid var(--border)">
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">ROLL</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">NAME</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">ROLE</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">WARNINGS</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">STRIKES</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">STATUS</th>
+                <th class="py-3 px-2 font-mono text-xs" style="color:var(--accent)">ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map(s => {
+                const isKuddus = s.isKuddus;
+                const status = s.strikes >= 3 ? 'danger' : s.strikes > 0 ? 'warning' : 'success';
+                const statusLabels = { danger:'Critical', warning:'At Risk', success:'Clear' };
+                const statusColors = { danger:'var(--danger)', warning:'var(--warning)', success:'var(--success)' };
+                return `<tr style="border-bottom:1px solid var(--border)" class="hover:bg-white/5">
+                  <td class="py-3 px-2 font-mono" style="color:var(--fg)">${s.rollNo}</td>
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full grid place-items-center text-xs font-bold" style="background:${isKuddus?'rgba(255,0,60,0.1)':'rgba(0,243,255,0.1)'};color:${isKuddus?'var(--danger)':'var(--accent)'};border:1px solid ${isKuddus?'var(--danger)':'var(--accent)'}">${s.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+                      <div>
+                        <div class="font-medium" style="color:var(--fg)">${s.name}</div>
+                        ${isKuddus ? '<div class="text-xs font-mono" style="color:var(--danger)">⚠ Under Investigation</div>' : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-xs">${s.role === 'captain' ? '<span class="badge badge-pending">Captain</span>' : '<span style="color:var(--fg-dim)">Student</span>'}</td>
+                  <td class="py-3 px-2 font-mono" style="color:var(--fg)">${s.warnings || 0}</td>
+                  <td class="py-3 px-2 font-mono" style="color:${s.strikes>=3?'var(--danger)':'var(--fg)'}">${s.strikes || 0}</td>
+                  <td class="py-3 px-2"><span class="badge" style="background:${statusColors[status]}10;color:${statusColors[status]};border:1px solid ${statusColors[status]};text-shadow:0 0 5px ${statusColors[status]}">${statusLabels[status]}</span></td>
+                  <td class="py-3 px-2"><button class="btn btn-ghost" onclick="Views.viewStudent('${s._id}')"><i data-lucide="eye" style="width:14px;height:14px"></i></button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+  },
+
+  viewStudent(id) {
+    const s = DB.findById('users', id);
+    if (!s) return;
+    const complaints = DB.find('complaints');
+    Modal.open(`<div class="p-6">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-16 h-16 rounded-full grid place-items-center text-xl font-bold" style="background:${s.isKuddus?'rgba(255,0,60,0.1)':'rgba(0,243,255,0.1)'};color:${s.isKuddus?'var(--danger)':'var(--accent)'};border:1px solid ${s.isKuddus?'var(--danger)':'var(--accent)'};box-shadow:0 0 15px ${s.isKuddus?'var(--danger)':'var(--accent)'}50">${s.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+        <div>
+          <h3 class="font-display text-xl font-bold" style="color:var(--fg)">${s.name}</h3>
+          <div class="text-sm font-mono" style="color:var(--accent)">Roll No: ${s.rollNo} · Class ${s.class}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="p-3 rounded-lg text-center" style="background:rgba(0,0,0,0.3);border:1px solid var(--warning)">
+          <div class="font-mono text-2xl font-bold" style="color:var(--warning);text-shadow:0 0 8px var(--warning)">${s.warnings||0}</div>
+          <div class="text-xs font-mono" style="color:var(--muted)">Warnings</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(0,0,0,0.3);border:1px solid var(--danger)">
+          <div class="font-mono text-2xl font-bold" style="color:var(--danger);text-shadow:0 0 8px var(--danger)">${s.strikes||0}</div>
+          <div class="text-xs font-mono" style="color:var(--muted)">Strikes</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(0,0,0,0.3);border:1px solid var(--accent)">
+          <div class="font-mono text-2xl font-bold" style="color:var(--accent);text-shadow:0 0 8px var(--accent)">${s.isKuddus ? complaints.length : 0}</div>
+          <div class="text-xs font-mono" style="color:var(--muted)">Complaints</div>
+        </div>
+      </div>
+
+      ${s.isKuddus ? `<div class="p-4 rounded-xl mb-4" style="background:rgba(255,0,60,0.05);border:1px solid var(--danger)">
+        <div class="flex gap-3">
+          <i data-lucide="alert-octagon" style="width:20px;height:20px;color:var(--danger);flex-shrink:0;filter:drop-shadow(0 0 5px var(--danger))"></i>
+          <div>
+            <div class="text-sm font-semibold" style="color:var(--danger)">Under Active Investigation</div>
+            <div class="text-xs mt-1" style="color:var(--fg-dim)">This student has accumulated ${s.strikes} strikes and is the subject of ${complaints.length} anonymous complaints. Recommend escalation to school administration.</div>
+          </div>
+        </div>
+      </div>` : ''}
+
+      <div class="flex gap-3">
+        <button class="btn btn-success flex-1 justify-center" onclick="Views.issueWarning('${s._id}')"><i data-lucide="alert-triangle" style="width:16px;height:16px"></i> Issue Warning</button>
+        <button class="btn btn-danger flex-1 justify-center" onclick="Views.issueStrike('${s._id}')"><i data-lucide="alert-octagon" style="width:16px;height:16px"></i> Issue Strike</button>
+      </div>
+      <button class="btn btn-ghost w-full justify-center mt-3" onclick="Modal.close()">Close</button>
+    </div>`);
+    lucide.createIcons();
+  },
+
+  issueWarning(id) {
+    const s = DB.findById('users', id);
+    DB.update('users', id, { warnings: (s.warnings||0)+1 });
+    DB._data.stats.totalWarnings++;
+    DB.save();
+    Modal.close();
+    Toast.show(`Warning issued to ${s.name}`, 'warning');
+    App.navigate('users');
+  },
+
+  issueStrike(id) {
+    const s = DB.findById('users', id);
+    DB.update('users', id, { strikes: (s.strikes||0)+1 });
+    DB._data.stats.totalStrikes++;
+    DB.save();
+    DB.insert('activity', { type:'strike', text:`Strike #${(s.strikes||0)+1} issued to ${s.name}`, time:Date.now(), icon:'alert-octagon', color:'var(--danger)' });
+    Modal.close();
+    Toast.show(`Strike issued to ${s.name}`, 'danger');
+    App.navigate('users');
+  },
+
+  settings(el) {
+    const u = Auth.current;
+    el.innerHTML = `
+      <div class="max-w-2xl space-y-6">
+        <div class="card">
+          <h3 class="font-display font-bold text-lg mb-4" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Profile Information</h3>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div><label class="form-label">Full Name</label><input class="form-input" value="${u.name}"></div>
+            <div><label class="form-label">Email</label><input class="form-input" value="${u.email}" disabled></div>
+            <div><label class="form-label">Role</label><input class="form-input" value="${u.role}" disabled></div>
+            <div><label class="form-label">Class</label><input class="form-input" value="${u.class||'N/A'}" disabled></div>
+          </div>
+          <button class="btn btn-primary mt-4" onclick="Toast.show('Profile updated','success')"><i data-lucide="save" style="width:16px;height:16px"></i> Save Changes</button>
+        </div>
+
+        <div class="card">
+          <h3 class="font-display font-bold text-lg mb-4" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Change Password</h3>
+          <div class="space-y-3">
+            <div><label class="form-label">Current Password</label><input type="password" class="form-input" placeholder="••••••••"></div>
+            <div><label class="form-label">New Password</label><input type="password" class="form-input" placeholder="••••••••"></div>
+            <div><label class="form-label">Confirm New Password</label><input type="password" class="form-input" placeholder="••••••••"></div>
+          </div>
+          <button class="btn btn-primary mt-4" onclick="Toast.show('Password changed successfully','success')"><i data-lucide="key" style="width:16px;height:16px"></i> Update Password</button>
+        </div>
+
+        <div class="card">
+          <h3 class="font-display font-bold text-lg mb-4" style="color:var(--accent);text-shadow:0 0 8px var(--accent-glow)">Security</h3>
+          <div class="space-y-3">
+            <label class="flex items-center justify-between p-3 rounded-lg cursor-pointer" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+              <div><div class="text-sm font-medium" style="color:var(--fg)">Two-Factor Authentication</div><div class="text-xs" style="color:var(--muted)">Extra layer of security for your account</div></div>
+              <input type="checkbox" style="accent-color:var(--accent);width:18px;height:18px">
+            </label>
+            <label class="flex items-center justify-between p-3 rounded-lg cursor-pointer" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+              <div><div class="text-sm font-medium" style="color:var(--fg)">Anonymous Mode</div><div class="text-xs" style="color:var(--muted)">Hide your activity from other users</div></div>
+              <input type="checkbox" checked style="accent-color:var(--accent);width:18px;height:18px">
+            </label>
+            <label class="flex items-center justify-between p-3 rounded-lg cursor-pointer" style="background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+              <div><div class="text-sm font-medium" style="color:var(--fg)">SOS Notifications</div><div class="text-xs" style="color:var(--muted)">Receive real-time SOS alerts</div></div>
+              <input type="checkbox" checked style="accent-color:var(--accent);width:18px;height:18px">
+            </label>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:var(--danger)">
+          <h3 class="font-display font-bold text-lg mb-2" style="color:var(--danger);text-shadow:0 0 8px var(--danger)">Danger Zone</h3>
+          <p class="text-xs mb-4" style="color:var(--fg-dim)">Once you sign out, you'll need to re-authenticate to access the protocol.</p>
+          <button class="btn btn-danger" onclick="App.logout()"><i data-lucide="log-out" style="width:16px;height:16px"></i> Sign Out</button>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+};
+
+// ─── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
